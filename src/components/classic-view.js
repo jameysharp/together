@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/core/styles';
+import { Shortcuts } from 'react-shortcuts';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Button from '@material-ui/core/Button';
@@ -73,9 +74,51 @@ class ClassicView extends React.Component {
       post: null,
     };
     this.handleScroll = this.handleScroll.bind(this);
+    this.handleShortcuts = this.handleShortcuts.bind(this);
     this.handlePostSelect = this.handlePostSelect.bind(this);
     this.renderItem = this.renderItem.bind(this);
     this.renderLoadMore = this.renderLoadMore.bind(this);
+  }
+
+  handleShortcuts(action, event) {
+    switch (action) {
+      case 'NEXT':
+        if (!this.state.post) {
+          this.setState({ post: this.props.posts[0] });
+        } else {
+          this.setState({
+            post: this.props.posts[
+              this.props.posts.findIndex(
+                post => post._id == this.state.post._id,
+              ) + 1
+            ],
+          });
+        }
+        break;
+      case 'PREVIOUS':
+        if (!this.state.post) {
+          this.setState({ post: this.props.posts[0] });
+        } else {
+          this.setState({
+            post: this.props.posts[
+              this.props.posts.findIndex(
+                post => post._id == this.state.post._id,
+              ) - 1
+            ],
+          });
+        }
+        break;
+      case 'SELECT_POST':
+        console.log('selecting post');
+        break;
+      case 'OPEN':
+        window.location = this.state.post.url;
+        break;
+      case 'TOGGLE_READ': {
+        console.log('toggle read');
+        break;
+      }
+    }
   }
 
   handleScroll() {
@@ -151,34 +194,36 @@ class ClassicView extends React.Component {
 
   render() {
     return (
-      <div className={this.props.classes.wrapper}>
-        <List
-          className={this.props.classes.previewColumn}
-          onScroll={this.handleScroll}
-        >
-          <ReactList
-            itemRenderer={this.renderItem}
-            length={this.props.posts.length}
-            type="variable"
-            ref={el => {
-              this.infiniteScroll = el;
-            }}
-          />
-          {this.renderLoadMore()}
-        </List>
-        {this.state.post && (
-          <div className={this.props.classes.postColumn}>
-            <TogetherCard post={this.state.post} embedMode="classic" />
-            <IconButton
-              aria-label="Close Post"
-              className={this.props.classes.closePost}
-              onClick={() => this.setState({ post: null })}
-            >
-              <CloseIcon />
-            </IconButton>
-          </div>
-        )}
-      </div>
+      <Shortcuts name="TIMELINE" handler={this.handleShortcuts}>
+        <div className={this.props.classes.wrapper}>
+          <List
+            className={this.props.classes.previewColumn}
+            onScroll={this.handleScroll}
+          >
+            <ReactList
+              itemRenderer={this.renderItem}
+              length={this.props.posts.length}
+              type="variable"
+              ref={el => {
+                this.infiniteScroll = el;
+              }}
+            />
+            {this.renderLoadMore()}
+          </List>
+          {this.state.post && (
+            <div className={this.props.classes.postColumn}>
+              <TogetherCard post={this.state.post} embedMode="classic" />
+              <IconButton
+                aria-label="Close Post"
+                className={this.props.classes.closePost}
+                onClick={() => this.setState({ post: null })}
+              >
+                <CloseIcon />
+              </IconButton>
+            </div>
+          )}
+        </div>
+      </Shortcuts>
     );
   }
 }

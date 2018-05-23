@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
@@ -10,6 +11,10 @@ import Settings from './components/settings';
 import ChannelSettings from './components/channel-settings';
 import Login from './components/login';
 import Notification from './components/notification';
+import keymap from './keymap';
+import { ShortcutManager } from 'react-shortcuts';
+
+const shortcutManager = new ShortcutManager(keymap);
 
 const style = theme => ({
   appWrapper: {
@@ -55,6 +60,10 @@ const style = theme => ({
 });
 
 class App extends Component {
+  getChildContext() {
+    return { shortcuts: shortcutManager };
+  }
+
   render() {
     let rootClasses = [this.props.classes.root];
     let channelMenuClasses = [this.props.classes.channelMenu];
@@ -88,6 +97,10 @@ class App extends Component {
     );
   }
 }
+
+App.childContextTypes = {
+  shortcuts: PropTypes.object.isRequired,
+};
 
 function mapStateToProps(state, props) {
   return {

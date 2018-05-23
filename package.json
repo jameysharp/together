@@ -42,6 +42,7 @@
     "react-map-gl": "^3.2.7",
     "react-redux": "^5.0.7",
     "react-router-dom": "^4.2.2",
+    "react-shortcuts": "^1.6.2",
     "redux": "^4.0.0",
     "socket.io-client": "^2.1.1",
     "url-search-params-polyfill": "^4.0.0",
