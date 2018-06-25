@@ -12,8 +12,8 @@ import ChannelSettings from './components/channel-settings';
 import Login from './components/login';
 import Notification from './components/notification';
 import keymap from './keymap';
+import MicropubEditor from './components/full-micropub-editor';
 import { ShortcutManager } from 'react-shortcuts';
-
 const shortcutManager = new ShortcutManager(keymap);
 
 const style = theme => ({
@@ -87,6 +87,7 @@ class App extends Component {
                 path="/channel/:channelSlug/edit"
                 component={ChannelSettings}
               />
+              <Route exact path="/editor" component={MicropubEditor} />
               <Route exact path="/settings" component={Settings} />
             </Grid>
             <Login />

@@ -1,13 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
 
 import { withStyles } from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
-import Avatar from '@material-ui/core/Avatar';
-import authorToAvatarData from '../modules/author-to-avatar-data';
-import TogetherCard from './card';
+import AuthorAvatar from './author-avatar';
+import TogetherCard from './card/index';
 
 const markerSize = 18;
 
@@ -42,6 +39,7 @@ class MapMarker extends React.Component {
   }
 
   handleClick(e) {
+    e.preventDefault();
     this.setState({
       postOpen: true,
       anchor: e.target,
@@ -68,26 +66,23 @@ class MapMarker extends React.Component {
         onClose={() => this.setState({ postOpen: false })}
         onBackdropClick={() => this.setState({ postOpen: false })}
       >
-        <TogetherCard post={this.props.post} embedMode="marker" />
+        <TogetherCard
+          post={this.props.post}
+          style={{ boxShadow: 'none', margin: 0 }}
+          hideProperties={['checkin', 'location']}
+        />
       </Popover>
     );
   }
 
   render() {
-    const avatarData = authorToAvatarData(this.props.author);
     return (
-      <div>
-        <Avatar
-          className={this.props.classes.marker}
-          {...avatarData}
-          style={{ background: avatarData.color }}
-          aria-label={avatarData.alt}
-          onClick={this.handleClick}
-        >
-          {avatarData.src ? null : avatarData.initials}
-        </Avatar>
+      <React.Fragment>
+        <div className={this.props.classes.marker} onClick={this.handleClick}>
+          <AuthorAvatar author={this.props.author} size={markerSize} />
+        </div>
         {this.renderPost()}
-      </div>
+      </React.Fragment>
     );
   }
 }
@@ -101,8 +96,4 @@ MapMarker.propTypes = {
   author: PropTypes.any.isRequired,
 };
 
-function mapDispatchToProps(dispatch) {
-  return bindActionCreators({}, dispatch);
-}
-
-export default connect(null, mapDispatchToProps)(withStyles(styles)(MapMarker));
+export default withStyles(styles)(MapMarker);

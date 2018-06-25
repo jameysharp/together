@@ -13,9 +13,10 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import SettingsIcon from '@material-ui/icons/Settings';
 import ChannelsIcon from '@material-ui/icons/Menu';
-import NoteAddIcon from '@material-ui/icons/NoteAdd';
-import EditIcon from '@material-ui/icons/Edit';
+import Tooltip from '@material-ui/core/Tooltip';
+import NoteAddIcon from '@material-ui/icons/Edit';
 import ReadIcon from '@material-ui/icons/DoneAll';
+import NotificationsList from './notifications-list';
 import MicropubForm from './micropub-form';
 import LayoutSwitcher from './layout-switcher';
 import { version } from '../../package.json';
@@ -175,14 +176,16 @@ class TogetherAppBar extends React.Component {
     return (
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            className={this.props.classes.menuButton}
-            onClick={this.props.toggleChannelsMenu}
-            color="inherit"
-            aria-label="Menu"
-          >
-            <ChannelsIcon />
-          </IconButton>
+          <Tooltip title="Channels" placement="bottom">
+            <IconButton
+              className={this.props.classes.menuButton}
+              onClick={this.props.toggleChannelsMenu}
+              color="inherit"
+              aria-label="Menu"
+            >
+              <ChannelsIcon />
+            </IconButton>
+          </Tooltip>
 
           <Typography
             variant="title"
@@ -194,28 +197,31 @@ class TogetherAppBar extends React.Component {
 
           <div>
             {selectedChannel && selectedChannel.unread ? (
-              <IconButton
-                aria-label="Mark all as Read"
-                className={this.props.classes.editButton}
-                onClick={this.handleMarkRead}
-              >
-                <ReadIcon />
-              </IconButton>
+              <Tooltip title="Mark all as read" placement="bottom">
+                <IconButton
+                  aria-label="Mark all as read"
+                  onClick={this.handleMarkRead}
+                >
+                  <ReadIcon />
+                </IconButton>
+              </Tooltip>
             ) : null}
 
-            <IconButton
-              aria-label="Compose Note"
-              className={this.props.classes.editButton}
-              onClick={this.handleCompose}
-            >
-              <NoteAddIcon />
-            </IconButton>
+            <Tooltip title="New post" placement="bottom">
+              <IconButton aria-label="New post" onClick={this.handleCompose}>
+                <NoteAddIcon />
+              </IconButton>
+            </Tooltip>
 
-            <IconButton
-              onClick={e => this.setState({ anchorEl: e.currentTarget })}
-            >
-              <SettingsIcon />
-            </IconButton>
+            <NotificationsList />
+
+            <Tooltip title="Settings" placement="bottom">
+              <IconButton
+                onClick={e => this.setState({ anchorEl: e.currentTarget })}
+              >
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
             <Menu
               anchorEl={this.state.anchorEl}
               anchorOrigin={{
@@ -282,6 +288,7 @@ function mapDispatchToProps(dispatch) {
   );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(
-  withStyles(styles)(TogetherAppBar),
-);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(withStyles(styles)(TogetherAppBar));

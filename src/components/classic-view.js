@@ -11,7 +11,7 @@ import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import ReactList from 'react-list';
 import CompressedPost from './compressed-post';
-import TogetherCard from './card';
+import TogetherCard from './card/index';
 import { decrementChannelUnread, updatePost } from '../actions';
 import { posts as postsService } from '../modules/feathers-services';
 import getChannelSetting from '../modules/get-channel-setting';
@@ -27,6 +27,7 @@ const styles = theme => ({
     overflow: 'hidden',
   },
   previewColumn: {
+    width: '100%',
     overflow: 'auto',
     borderRight: '1px solid ' + theme.palette.divider,
     flexShrink: 0,
@@ -154,7 +155,7 @@ class ClassicView extends React.Component {
           this.props.decrementChannelUnread(this.props.selectedChannel);
         })
         .catch(err => {
-          console.log(err);
+          console.log('Error marking post read', err);
         });
     }
   }
@@ -212,7 +213,15 @@ class ClassicView extends React.Component {
           </List>
           {this.state.post && (
             <div className={this.props.classes.postColumn}>
-              <TogetherCard post={this.state.post} embedMode="classic" />
+              <TogetherCard
+                post={this.state.post}
+                style={{
+                  margin: 0,
+                  minHeight: '100%',
+                  maxWidth: 700,
+                  boxShadow: 'none',
+                }}
+              />
               <IconButton
                 aria-label="Close Post"
                 className={this.props.classes.closePost}
@@ -253,6 +262,7 @@ function mapDispatchToProps(dispatch) {
   );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(
-  withStyles(styles)(ClassicView),
-);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(withStyles(styles)(ClassicView));
