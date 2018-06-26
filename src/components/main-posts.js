@@ -20,6 +20,7 @@ import {
   setTimelineAfter,
   setTimelineBefore,
   selectChannel,
+  focusComponent,
 } from '../actions';
 
 const styles = theme => ({
@@ -56,6 +57,9 @@ class MainPosts extends React.Component {
     ) {
       const channel = decodeURIComponent(this.props.match.params.channelSlug);
       this.props.selectChannel(channel);
+      this.props.focusComponent('timeline');
+    } else {
+      this.props.focusComponent('channels');
     }
   }
 
@@ -260,6 +264,7 @@ function mapDispatchToProps(dispatch) {
       setTimelineAfter: setTimelineAfter,
       setTimelineBefore: setTimelineBefore,
       selectChannel: selectChannel,
+      focusComponent,
     },
     dispatch,
   );

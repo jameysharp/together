@@ -26,3 +26,8 @@ export const toggleTheme = () => {
     type: 'TOGGLE_THEME',
   };
 };
+
+export const focusComponent = component => ({
+  type: 'SET_FOCUSSED_COMPONENT',
+  component,
+});

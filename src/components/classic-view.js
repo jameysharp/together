@@ -12,10 +12,9 @@ import CloseIcon from '@material-ui/icons/Close';
 import ReactList from 'react-list';
 import CompressedPost from './compressed-post';
 import TogetherCard from './card/index';
-import { decrementChannelUnread, updatePost } from '../actions';
+import { decrementChannelUnread, updatePost, focusComponent } from '../actions';
 import { posts as postsService } from '../modules/feathers-services';
 import getChannelSetting from '../modules/get-channel-setting';
-import channelSettings from './channel-settings';
 
 const styles = theme => ({
   wrapper: {
@@ -74,50 +73,181 @@ class ClassicView extends React.Component {
     this.state = {
       post: null,
     };
+    this.elRef = React.createRef();
+    this.postRef = React.createRef();
     this.handleScroll = this.handleScroll.bind(this);
     this.handleShortcuts = this.handleShortcuts.bind(this);
+    this.handlePostShortcuts = this.handlePostShortcuts.bind(this);
     this.handlePostSelect = this.handlePostSelect.bind(this);
     this.renderItem = this.renderItem.bind(this);
     this.renderLoadMore = this.renderLoadMore.bind(this);
   }
 
+  componentDidMount() {
+    if (this.props.focussed && this.elRef.current) {
+      this.elRef.current._domNode.focus();
+    }
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (newProps.focussed && !this.props.focussed && this.elRef.current) {
+      console.log('Focussing classic list');
+      this.elRef.current._domNode.focus();
+    }
+    if (
+      newProps.postFocussed &&
+      !this.props.postFocussed &&
+      this.postRef.current
+    ) {
+      this.postRef.current._domNode.focus();
+      console.log('focussing classic post');
+    }
+  }
+
+  handlePostShortcuts(action, event) {
+    console.log('post shortcut', action);
+    const scrollDistance = 30;
+    if (this.props.postFocussed) {
+      const post = this.props.posts.find(p => p._id == this.state.post);
+      switch (action) {
+        case 'SCROLL_UP':
+          this.postRef.current._domNode.scrollBy(0, 0 - scrollDistance);
+          break;
+        case 'SCROLL_DOWN':
+          this.postRef.current._domNode.scrollBy(0, scrollDistance);
+          break;
+        case 'TO_TIMELINE': {
+          this.props.focusComponent('timeline');
+          break;
+        }
+        case 'OPEN': {
+          if (post && post.url) {
+            window.open(post.url, '_blank');
+          }
+          break;
+        }
+        case 'NEXT': {
+          if (post) {
+            const index = this.props.posts.findIndex(p => p._id == post._id);
+            if (index < this.props.posts.length - 1) {
+              this.handlePostSelect(this.props.posts[index + 1]);
+            }
+          }
+          break;
+        }
+        case 'TOGGLE_READ': {
+          if (post._is_read === false) {
+            postsService
+              .update(post._id, {
+                channel: this.props.selectedChannel,
+                method: 'mark_read',
+              })
+              .then(res => {
+                this.props.updatePost(post._id, '_is_read', true);
+                this.props.decrementChannelUnread(this.props.selectedChannel);
+              })
+              .catch(err => {
+                console.log('Error marking post read', err);
+              });
+          } else if (post._is_read === true) {
+            postsService
+              .update(post._id, {
+                channel: this.props.selectedChannel,
+                method: 'mark_unread',
+              })
+              .then(res => {
+                this.props.updatePost(post._id, '_is_read', false);
+                this.props.incrementChannelUnread(this.props.selectedChannel);
+              })
+              .catch(err => {
+                console.log('Error marking post read', err);
+              });
+          }
+          break;
+        }
+      }
+    }
+  }
+
   handleShortcuts(action, event) {
-    switch (action) {
-      case 'NEXT':
-        if (!this.state.post) {
-          this.setState({ post: this.props.posts[0] });
-        } else {
-          this.setState({
-            post: this.props.posts[
-              this.props.posts.findIndex(
-                post => post._id == this.state.post._id,
-              ) + 1
-            ],
-          });
+    if (this.props.focussed) {
+      console.log('classic list shortcut', action);
+      const post = this.props.posts.find(p => p._id == this.state.post);
+
+      switch (action) {
+        case 'NEXT':
+          if (!this.state.post) {
+            this.setState({ post: this.props.posts[0]._id });
+          } else {
+            const index = this.props.posts.findIndex(
+              p => p._id == this.state.post,
+            );
+            if (index < this.props.posts.length - 1) {
+              this.handlePostSelect(this.props.posts[index + 1]);
+              if (this.infiniteScroll) {
+                this.infiniteScroll.scrollAround(index + 1);
+              }
+            }
+          }
+          break;
+        case 'PREVIOUS':
+          if (!this.state.post) {
+            this.setState({ post: this.props.posts[0]._id });
+          } else {
+            const index = this.props.posts.findIndex(
+              p => p._id == this.state.post,
+            );
+            if (index > 0) {
+              this.handlePostSelect(this.props.posts[index - 1]);
+              if (this.infiniteScroll) {
+                this.infiniteScroll.scrollAround(index - 1);
+              }
+            }
+          }
+          break;
+        case 'GO_TO_CHANNEL_LIST':
+          console.log('Go to channel list');
+          this.props.focusComponent('channels');
+          break;
+        case 'SELECT_POST':
+          console.log('Move controls to post');
+          this.props.focusComponent('post');
+          break;
+        case 'OPEN':
+          if (post && post.url) {
+            window.open(post.url, '_blank');
+          }
+          break;
+        case 'TOGGLE_READ': {
+          if (post._is_read === false) {
+            postsService
+              .update(post._id, {
+                channel: this.props.selectedChannel,
+                method: 'mark_read',
+              })
+              .then(res => {
+                this.props.updatePost(post._id, '_is_read', true);
+                this.props.decrementChannelUnread(this.props.selectedChannel);
+              })
+              .catch(err => {
+                console.log('Error marking post read', err);
+              });
+          } else if (post._is_read === true) {
+            postsService
+              .update(post._id, {
+                channel: this.props.selectedChannel,
+                method: 'mark_unread',
+              })
+              .then(res => {
+                this.props.updatePost(post._id, '_is_read', false);
+                this.props.incrementChannelUnread(this.props.selectedChannel);
+              })
+              .catch(err => {
+                console.log('Error marking post read', err);
+              });
+          }
+          break;
         }
-        break;
-      case 'PREVIOUS':
-        if (!this.state.post) {
-          this.setState({ post: this.props.posts[0] });
-        } else {
-          this.setState({
-            post: this.props.posts[
-              this.props.posts.findIndex(
-                post => post._id == this.state.post._id,
-              ) - 1
-            ],
-          });
-        }
-        break;
-      case 'SELECT_POST':
-        console.log('selecting post');
-        break;
-      case 'OPEN':
-        window.location = this.state.post.url;
-        break;
-      case 'TOGGLE_READ': {
-        console.log('toggle read');
-        break;
       }
     }
   }
@@ -142,7 +272,7 @@ class ClassicView extends React.Component {
   handlePostSelect(post) {
     const read = post._is_read;
     post._is_read = true;
-    this.setState({ post: post });
+    this.setState({ post: post._id });
     // Mark the post as read
     if (!read) {
       postsService
@@ -161,11 +291,18 @@ class ClassicView extends React.Component {
   }
 
   renderItem(index, key) {
+    const post = this.props.posts[index];
     return (
       <CompressedPost
         key={key}
-        post={this.props.posts[index]}
-        onClick={() => this.handlePostSelect(this.props.posts[index])}
+        post={post}
+        onClick={() => {
+          this.handlePostSelect(post);
+          this.props.focusComponent('post');
+        }}
+        highlighted={
+          this.state.post && this.state.post === post._id ? true : false
+        }
       />
     );
   }
@@ -195,7 +332,11 @@ class ClassicView extends React.Component {
 
   render() {
     return (
-      <Shortcuts name="TIMELINE" handler={this.handleShortcuts}>
+      <Shortcuts
+        ref={this.elRef}
+        name="TIMELINE"
+        handler={this.handleShortcuts}
+      >
         <div className={this.props.classes.wrapper}>
           <List
             className={this.props.classes.previewColumn}
@@ -212,9 +353,18 @@ class ClassicView extends React.Component {
             {this.renderLoadMore()}
           </List>
           {this.state.post && (
-            <div className={this.props.classes.postColumn}>
+            <Shortcuts
+              ref={this.postRef}
+              name="POST"
+              handler={this.handlePostShortcuts}
+              className={this.props.classes.postColumn}
+              // stopPropagation={true}
+              // preventDefault={true}
+            >
               <TogetherCard
-                post={this.state.post}
+                post={this.props.posts.find(
+                  post => post._id == this.state.post,
+                )}
                 style={{
                   margin: 0,
                   minHeight: '100%',
@@ -229,7 +379,7 @@ class ClassicView extends React.Component {
               >
                 <CloseIcon />
               </IconButton>
-            </div>
+            </Shortcuts>
           )}
         </div>
       </Shortcuts>
@@ -249,6 +399,8 @@ function mapStateToProps(state, props) {
   return {
     selectedChannel: state.app.get('selectedChannel'),
     channelSettings: state.settings.get('channels'),
+    focussed: state.app.get('focussedComponent') == 'timeline',
+    postFocussed: state.app.get('focussedComponent') == 'post',
   };
 }
 
@@ -257,6 +409,7 @@ function mapDispatchToProps(dispatch) {
     {
       decrementChannelUnread: decrementChannelUnread,
       updatePost: updatePost,
+      focusComponent,
     },
     dispatch,
   );

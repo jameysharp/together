@@ -19,8 +19,13 @@ const styles = theme => ({
       paddingRight: theme.spacing.unit * 2,
     },
   },
+  highlighted: {
+    background: theme.palette.secondary.main,
+    color: theme.palette.getContrastText(theme.palette.secondary.main),
+  },
   text: {
     paddingRight: 0,
+    color: 'inherit',
   },
 });
 
@@ -63,16 +68,16 @@ class CompressedTogetherCard extends React.Component {
   }
 
   render() {
-    const item = this.props.post;
+    const { post, highlighted, classes } = this.props;
 
     // Parse published date
     let date = 'unknown';
-    if (item.published) {
-      date = moment(item.published).fromNow();
+    if (post.published) {
+      date = moment(post.published).fromNow();
     }
 
     let readStyle = {};
-    if (item._is_read) {
+    if (post._is_read) {
       readStyle.opacity = 0.5;
     }
 
@@ -82,13 +87,21 @@ class CompressedTogetherCard extends React.Component {
         button
         onClick={this.handleClick}
         style={readStyle}
-        className={this.props.classes.item}
+        className={
+          highlighted
+            ? [classes.item, classes.highlighted].join(' ')
+            : classes.item
+        }
       >
-        <AuthorAvatar author={item.author} />
+        <AuthorAvatar author={post.author} />
         <ListItemText
           primary={this.getPreviewText()}
           secondary={date}
-          className={this.props.classes.text}
+          className={classes.text}
+          classes={{
+            primary: classes.text,
+            secondary: classes.text,
+          }}
         />
       </ListItem>
     );
@@ -97,10 +110,12 @@ class CompressedTogetherCard extends React.Component {
 
 CompressedTogetherCard.defaultProps = {
   post: {},
+  highlighted: false,
 };
 
 CompressedTogetherCard.propTypes = {
   post: PropTypes.object.isRequired,
+  highlighted: PropTypes.bool.isRequired,
 };
 
 export default withStyles(styles)(CompressedTogetherCard);

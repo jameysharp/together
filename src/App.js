@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import AppBar from './components/app-bar';
@@ -13,6 +13,7 @@ import Login from './components/login';
 import Notification from './components/notification';
 import keymap from './keymap';
 import MicropubEditor from './components/full-micropub-editor';
+import GlobalShortcuts from './components/global-shortcut-handler';
 import { ShortcutManager } from 'react-shortcuts';
 const shortcutManager = new ShortcutManager(keymap);
 
@@ -73,27 +74,30 @@ class App extends Component {
     }
     return (
       <Router>
-        <Grid container spacing={0} className={this.props.classes.appWrapper}>
-          <AppBar />
-          <Grid item container spacing={0} className={rootClasses.join(' ')}>
-            <Grid item className={channelMenuClasses.join(' ')}>
-              <ChannelMenu />
+        <GlobalShortcuts>
+          <Grid container spacing={0} className={this.props.classes.appWrapper}>
+            <AppBar />
+            <Grid item container spacing={0} className={rootClasses.join(' ')}>
+              <Grid item className={channelMenuClasses.join(' ')}>
+                <ChannelMenu />
+              </Grid>
+              <Grid item className={this.props.classes.main}>
+                <Switch>
+                  <Route exact path="/" component={MainPosts} />
+                  <Route path="/channel/:channelSlug" component={MainPosts} />
+                  <Route
+                    path="/channel/:channelSlug/edit"
+                    component={ChannelSettings}
+                  />
+                  <Route ath="/editor" component={MicropubEditor} />
+                  <Route path="/settings" component={Settings} />
+                </Switch>
+              </Grid>
+              <Login />
+              <Notification />
             </Grid>
-            <Grid item className={this.props.classes.main}>
-              <Route exact path="/" component={MainPosts} />
-              <Route exact path="/channel/:channelSlug" component={MainPosts} />
-              <Route
-                exact
-                path="/channel/:channelSlug/edit"
-                component={ChannelSettings}
-              />
-              <Route exact path="/editor" component={MicropubEditor} />
-              <Route exact path="/settings" component={Settings} />
-            </Grid>
-            <Login />
-            <Notification />
           </Grid>
-        </Grid>
+        </GlobalShortcuts>
       </Router>
     );
   }

@@ -7,6 +7,7 @@ const defaultState = new Map({
   timelineAfter: '',
   notifications: [],
   theme: localStorage.getItem('together-theme') || 'light',
+  focussedComponent: null,
 });
 
 export default (state = defaultState, payload) => {
@@ -16,6 +17,9 @@ export default (state = defaultState, payload) => {
     }
     case 'SET_SELECTED_CHANNEL': {
       return state.set('selectedChannel', payload.uid);
+    }
+    case 'SET_FOCUSSED_COMPONENT': {
+      return state.set('focussedComponent', payload.component);
     }
     case 'SET_TIMELINE_BEFORE': {
       return state.set('timelineBefore', payload.before);
